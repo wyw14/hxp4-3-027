@@ -146,23 +146,25 @@ export class Renderer {
     time: number,
     showFreq: boolean,
     highlightedId: string | null,
-    connectedIds: Set<string>
+    connectedIds: Set<string>,
+    searchHighlightedIds: Set<string> = new Set()
   ): void {
     for (const anchor of anchors) {
       const pos = this.getAnchorScreenPos(anchor, rotation);
       const twinkle = Math.sin(time * anchor.frequency * 0.8) * 0.3 + 0.7;
       const brightness = (anchor.baseBrightness ?? 0.7) * twinkle;
-      const size = (anchor.size ?? 3) * (highlightedId === anchor.id ? 1.8 : 1);
+      const isSearchHighlighted = searchHighlightedIds.has(anchor.id);
+      const size = (anchor.size ?? 3) * (highlightedId === anchor.id || isSearchHighlighted ? 1.8 : 1);
 
       const isAnchor = anchor.id.startsWith('a') || anchor.id.startsWith('b') || anchor.id.startsWith('c');
       const baseColor = isAnchor ? { r: 200, g: 220, b: 255 } : { r: 180, g: 180, b: 200 };
       const isConnected = connectedIds.has(anchor.id);
-      const connColor = isConnected ? { r: 255, g: 215, b: 100 } : baseColor;
+      const connColor = isConnected ? { r: 255, g: 215, b: 100 } : (isSearchHighlighted ? { r: 0, g: 255, b: 200 } : baseColor);
 
-      const glowR = size * 8;
+      const glowR = size * (isSearchHighlighted ? 12 : 8);
       const glow = this.ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, glowR);
-      glow.addColorStop(0, `rgba(${connColor.r}, ${connColor.g}, ${connColor.b}, ${brightness * 0.5})`);
-      glow.addColorStop(0.4, `rgba(${connColor.r}, ${connColor.g}, ${connColor.b}, ${brightness * 0.15})`);
+      glow.addColorStop(0, `rgba(${connColor.r}, ${connColor.g}, ${connColor.b}, ${brightness * (isSearchHighlighted ? 0.8 : 0.5)})`);
+      glow.addColorStop(0.4, `rgba(${connColor.r}, ${connColor.g}, ${connColor.b}, ${brightness * (isSearchHighlighted ? 0.3 : 0.15)})`);
       glow.addColorStop(1, `rgba(${connColor.r}, ${connColor.g}, ${connColor.b}, 0)`);
       this.ctx.beginPath();
       this.ctx.arc(pos.x, pos.y, glowR, 0, Math.PI * 2);
@@ -187,6 +189,26 @@ export class Renderer {
         this.ctx.setLineDash([4, 4]);
         this.ctx.stroke();
         this.ctx.setLineDash([]);
+      }
+
+      if (isSearchHighlighted) {
+        this.ctx.beginPath();
+        this.ctx.arc(pos.x, pos.y, size * 3, 0, Math.PI * 2);
+        this.ctx.strokeStyle = `rgba(0, 255, 200, ${0.6 + Math.sin(time * 4) * 0.3})`;
+        this.ctx.lineWidth = 3;
+        this.ctx.setLineDash([6, 3]);
+        this.ctx.stroke();
+        this.ctx.setLineDash([]);
+
+        if (anchor.name) {
+          this.ctx.font = 'bold 13px "Microsoft YaHei", sans-serif';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillStyle = `rgba(0, 255, 200, ${0.9 + Math.sin(time * 3) * 0.1})`;
+          this.ctx.fillText(anchor.name, pos.x, pos.y - size * 4 - 5);
+          this.ctx.font = '11px monospace';
+          this.ctx.fillStyle = `rgba(0, 255, 200, 0.85)`;
+          this.ctx.fillText(`${anchor.frequency.toFixed(1)}Hz`, pos.x, pos.y - size * 4 - 22);
+        }
       }
 
       if (showFreq && isAnchor) {

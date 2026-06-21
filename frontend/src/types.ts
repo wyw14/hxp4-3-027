@@ -77,6 +77,7 @@ export interface GameState {
   showFrequencies: boolean;
   isComplete: boolean;
   snapTargetId: string | null;
+  highlightedSearchIds: Set<string>;
 }
 
 export interface VerifyResult {
@@ -86,4 +87,9 @@ export interface VerifyResult {
   isDefinedEdge: boolean;
   frequencies?: Record<string, number>;
   ratio?: [number, number] | null;
+}
+
+export interface SearchResultItem {
+  anchor: AnchorPoint;
+  connectedMainStars: AnchorPoint[];
 }

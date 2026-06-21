@@ -6,7 +6,8 @@ import type {
   ScreenPoint,
   CurvePoint,
   BackgroundStar,
-  LevelData
+  LevelData,
+  SearchResultItem
 } from './types';
 import { Renderer } from './renderer';
 import { getLevel, verifyEdge } from './api';
@@ -49,7 +50,8 @@ export class Game {
       time: 0,
       showFrequencies: false,
       isComplete: false,
-      snapTargetId: null
+      snapTargetId: null,
+      highlightedSearchIds: new Set()
     };
 
     this.resize();
@@ -345,6 +347,7 @@ export class Game {
     this.state.isComplete = false;
     this.state.drawState = this.createEmptyDrawState();
     this.state.snapTargetId = null;
+    this.state.highlightedSearchIds = new Set();
     this.onProgressChange?.(0, this.state.levelData?.edges.length ?? 0);
   }
 
@@ -371,6 +374,7 @@ export class Game {
     this.state.drawState = this.createEmptyDrawState();
     this.state.snapTargetId = null;
     this.state.showFrequencies = false;
+    this.state.highlightedSearchIds = new Set();
 
     this.onLevelChange?.(data);
     this.onProgressChange?.(0, data.edges.length);
@@ -380,6 +384,95 @@ export class Game {
 
   getCurrentLevel(): number {
     return this.state.currentLevel;
+  }
+
+  private isMainStar(anchor: AnchorPoint): boolean {
+    return anchor.id.startsWith('a') || anchor.id.startsWith('b') || anchor.id.startsWith('c');
+  }
+
+  private getConnectedMainStars(anchorId: string): AnchorPoint[] {
+    if (!this.state.levelData) return [];
+
+    const result: AnchorPoint[] = [];
+    const { edges, anchorPoints } = this.state.levelData;
+
+    for (const edge of edges) {
+      let connectedId: string | null = null;
+      if (edge.from === anchorId) {
+        connectedId = edge.to;
+      } else if (edge.to === anchorId) {
+        connectedId = edge.from;
+      }
+
+      if (connectedId) {
+        const connected = anchorPoints.find(a => a.id === connectedId);
+        if (connected && this.isMainStar(connected)) {
+          result.push(connected);
+        }
+      }
+    }
+
+    return result;
+  }
+
+  searchByName(keyword: string): SearchResultItem[] {
+    if (!this.state.levelData || !keyword.trim()) {
+      this.state.highlightedSearchIds = new Set();
+      return [];
+    }
+
+    const lowerKeyword = keyword.trim().toLowerCase();
+    const results: SearchResultItem[] = [];
+    const highlighted = new Set<string>();
+
+    for (const anchor of this.state.levelData.anchorPoints) {
+      const nameMatch = anchor.name?.toLowerCase().includes(lowerKeyword);
+      const idMatch = anchor.id.toLowerCase().includes(lowerKeyword);
+
+      if (nameMatch || idMatch) {
+        highlighted.add(anchor.id);
+        results.push({
+          anchor,
+          connectedMainStars: this.getConnectedMainStars(anchor.id)
+        });
+      }
+    }
+
+    this.state.highlightedSearchIds = highlighted;
+    return results;
+  }
+
+  searchByFrequencyRange(minFreq: number | null, maxFreq: number | null): SearchResultItem[] {
+    if (!this.state.levelData || (minFreq === null && maxFreq === null)) {
+      this.state.highlightedSearchIds = new Set();
+      return [];
+    }
+
+    const min = minFreq ?? -Infinity;
+    const max = maxFreq ?? Infinity;
+    const results: SearchResultItem[] = [];
+    const highlighted = new Set<string>();
+
+    for (const anchor of this.state.levelData.anchorPoints) {
+      if (anchor.frequency >= min && anchor.frequency <= max) {
+        highlighted.add(anchor.id);
+        results.push({
+          anchor,
+          connectedMainStars: this.getConnectedMainStars(anchor.id)
+        });
+      }
+    }
+
+    this.state.highlightedSearchIds = highlighted;
+    return results;
+  }
+
+  clearSearchHighlight(): void {
+    this.state.highlightedSearchIds = new Set();
+  }
+
+  getSearchHighlightedIds(): Set<string> {
+    return this.state.highlightedSearchIds;
   }
 
   start(): void {
@@ -469,7 +562,8 @@ export class Game {
         this.state.time,
         this.state.showFrequencies,
         this.state.snapTargetId ?? this.state.drawState.startAnchorId,
-        connectedIds
+        connectedIds,
+        this.state.highlightedSearchIds
       );
 
       this.renderer.drawCompletionEffect(this.state.time, this.getProgress());

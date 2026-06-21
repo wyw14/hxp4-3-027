@@ -126,6 +126,221 @@
         transform: translateX(-50%);
         pointer-events: auto;
       }
+
+      #search-panel {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 420px;
+        max-height: 80vh;
+        padding: 18px 20px;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(0, 255, 200, 0.35);
+        border-radius: 14px;
+        font-size: 13px;
+        pointer-events: auto;
+        display: none;
+        flex-direction: column;
+        z-index: 100;
+        box-shadow: 0 8px 32px rgba(0, 255, 200, 0.1);
+      }
+      #search-panel.show {
+        display: flex;
+      }
+      #search-panel .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+      #search-panel .panel-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #00ffc8;
+        text-shadow: 0 0 10px rgba(0, 255, 200, 0.4);
+      }
+      #search-panel .close-btn {
+        background: none;
+        border: none;
+        color: #888;
+        font-size: 20px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0 6px;
+        transition: color 0.2s;
+      }
+      #search-panel .close-btn:hover {
+        color: #ff6b6b;
+      }
+      .search-section {
+        margin-bottom: 12px;
+      }
+      .search-label {
+        display: block;
+        color: #a0c4ff;
+        margin-bottom: 6px;
+        font-size: 12px;
+      }
+      .search-input-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .search-input {
+        flex: 1;
+        padding: 8px 12px;
+        background: rgba(10, 15, 40, 0.8);
+        border: 1px solid rgba(100, 150, 255, 0.3);
+        border-radius: 6px;
+        color: #fff;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .search-input:focus {
+        border-color: rgba(0, 255, 200, 0.6);
+        box-shadow: 0 0 8px rgba(0, 255, 200, 0.2);
+      }
+      .search-input.small {
+        flex: 0 0 90px;
+      }
+      .search-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .search-btn {
+        flex: 1;
+        padding: 9px 16px;
+        background: linear-gradient(135deg, rgba(0, 200, 160, 0.8) 0%, rgba(0, 160, 180, 0.8) 100%);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+      .search-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(0, 200, 160, 0.4);
+      }
+      .search-btn.clear {
+        background: linear-gradient(135deg, rgba(120, 120, 140, 0.6) 0%, rgba(80, 80, 100, 0.6) 100%);
+      }
+      .search-btn.clear:hover {
+        box-shadow: 0 4px 14px rgba(120, 120, 140, 0.3);
+      }
+      .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(100, 150, 255, 0.3), transparent);
+        margin: 10px 0;
+      }
+      .search-results {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 40vh;
+        padding-right: 4px;
+      }
+      .search-results::-webkit-scrollbar {
+        width: 6px;
+      }
+      .search-results::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+      }
+      .search-results::-webkit-scrollbar-thumb {
+        background: rgba(0, 255, 200, 0.3);
+        border-radius: 3px;
+      }
+      .result-count {
+        color: #888;
+        font-size: 12px;
+        margin-bottom: 8px;
+      }
+      .result-count span {
+        color: #00ffc8;
+        font-weight: bold;
+      }
+      .result-item {
+        padding: 10px 12px;
+        background: rgba(10, 15, 40, 0.6);
+        border: 1px solid rgba(0, 255, 200, 0.2);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        transition: all 0.2s;
+      }
+      .result-item:hover {
+        border-color: rgba(0, 255, 200, 0.5);
+        background: rgba(0, 50, 40, 0.4);
+      }
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+      .result-name {
+        font-weight: bold;
+        color: #00ffc8;
+        font-size: 14px;
+      }
+      .result-id {
+        font-family: monospace;
+        font-size: 11px;
+        color: #888;
+      }
+      .result-frequency {
+        display: inline-block;
+        padding: 2px 8px;
+        background: rgba(102, 126, 234, 0.25);
+        border: 1px solid rgba(102, 126, 234, 0.4);
+        border-radius: 10px;
+        font-size: 11px;
+        color: #a0c4ff;
+        margin-bottom: 6px;
+      }
+      .result-connections-title {
+        font-size: 11px;
+        color: #888;
+        margin-bottom: 4px;
+      }
+      .result-connections {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .connection-tag {
+        padding: 3px 8px;
+        background: rgba(255, 215, 0, 0.12);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        border-radius: 6px;
+        font-size: 11px;
+        color: #ffd700;
+      }
+      .no-connections {
+        font-size: 11px;
+        color: #666;
+        font-style: italic;
+      }
+      #btn-search-toggle {
+        pointer-events: auto;
+        padding: 10px 20px;
+        background: linear-gradient(135deg, rgba(0, 180, 140, 0.9) 0%, rgba(0, 140, 160, 0.9) 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+        margin: 0 5px;
+      }
+      #btn-search-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 180, 140, 0.4);
+      }
     </style>
   </head>
   <body>
@@ -150,6 +365,41 @@
         <button class="btn" id="btn-undo">撤销连线</button>
         <button class="btn" id="btn-reset">重置本关</button>
         <button class="btn" id="btn-hint">显示频率</button>
+        <button id="btn-search-toggle">🔍 星点检索</button>
+      </div>
+
+      <div id="search-panel">
+        <div class="panel-header">
+          <div class="panel-title">⭐ 星点检索器</div>
+          <button class="close-btn" id="search-close">×</button>
+        </div>
+
+        <div class="search-section">
+          <label class="search-label">按名称/ID搜索</label>
+          <input type="text" class="search-input" id="search-name" placeholder="输入星点名称或ID，如：龙心、a1、辅星" />
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="search-section">
+          <label class="search-label">按频率范围搜索 (Hz)</label>
+          <div class="search-input-row">
+            <input type="number" class="search-input small" id="search-freq-min" placeholder="最小" step="0.1" min="0" />
+            <span style="color: #888;">~</span>
+            <input type="number" class="search-input small" id="search-freq-max" placeholder="最大" step="0.1" min="0" />
+          </div>
+        </div>
+
+        <div class="search-buttons">
+          <button class="search-btn" id="btn-search-exec">搜索</button>
+          <button class="search-btn clear" id="btn-search-clear">清除</button>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="search-results" id="search-results">
+          <div class="result-count">找到 <span>0</span> 个匹配星点</div>
+        </div>
       </div>
       <div id="complete-modal">
         <h2 id="modal-title">✨ 星座完成 ✨</h2>

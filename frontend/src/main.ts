@@ -1,5 +1,5 @@
 import { Game } from './game';
-import type { LevelData } from './types';
+import type { LevelData, SearchResultItem } from './types';
 import { healthCheck } from './api';
 
 const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
@@ -21,7 +21,126 @@ const btnReset = document.getElementById('btn-reset') as HTMLButtonElement;
 const btnHint = document.getElementById('btn-hint') as HTMLButtonElement;
 const btnNext = document.getElementById('btn-next') as HTMLButtonElement;
 
+const btnSearchToggle = document.getElementById('btn-search-toggle') as HTMLButtonElement;
+const searchPanel = document.getElementById('search-panel') as HTMLDivElement;
+const searchClose = document.getElementById('search-close') as HTMLButtonElement;
+const searchNameInput = document.getElementById('search-name') as HTMLInputElement;
+const searchFreqMin = document.getElementById('search-freq-min') as HTMLInputElement;
+const searchFreqMax = document.getElementById('search-freq-max') as HTMLInputElement;
+const btnSearchExec = document.getElementById('btn-search-exec') as HTMLButtonElement;
+const btnSearchClear = document.getElementById('btn-search-clear') as HTMLButtonElement;
+const searchResultsContainer = document.getElementById('search-results') as HTMLDivElement;
+
 const MAX_LEVELS = 3;
+
+function renderSearchResults(results: SearchResultItem[]): void {
+  const countSpan = searchResultsContainer.querySelector('.result-count span')!;
+  countSpan.textContent = String(results.length);
+
+  const items = searchResultsContainer.querySelectorAll('.result-item');
+  items.forEach(item => item.remove());
+
+  if (results.length === 0) {
+    const emptyHint = document.createElement('div');
+    emptyHint.style.cssText = 'text-align:center;color:#666;padding:20px 0;font-size:13px;';
+    emptyHint.textContent = '未找到匹配的星点';
+    searchResultsContainer.appendChild(emptyHint);
+    return;
+  }
+
+  for (const item of results) {
+    const div = document.createElement('div');
+    div.className = 'result-item';
+
+    const header = document.createElement('div');
+    header.className = 'result-header';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'result-name';
+    nameEl.textContent = item.anchor.name ?? '(未命名)';
+
+    const idEl = document.createElement('span');
+    idEl.className = 'result-id';
+    idEl.textContent = `ID: ${item.anchor.id}`;
+
+    header.appendChild(nameEl);
+    header.appendChild(idEl);
+    div.appendChild(header);
+
+    const freqEl = document.createElement('div');
+    freqEl.className = 'result-frequency';
+    freqEl.textContent = `🔊 ${item.anchor.frequency.toFixed(1)} Hz`;
+    div.appendChild(freqEl);
+
+    const connTitle = document.createElement('div');
+    connTitle.className = 'result-connections-title';
+    connTitle.textContent = `🔗 连接到主星 (${item.connectedMainStars.length}个):`;
+    div.appendChild(connTitle);
+
+    const connContainer = document.createElement('div');
+    connContainer.className = 'result-connections';
+
+    if (item.connectedMainStars.length === 0) {
+      const noConn = document.createElement('span');
+      noConn.className = 'no-connections';
+      noConn.textContent = '无直接主星连接（辅星/独立星）';
+      connContainer.appendChild(noConn);
+    } else {
+      for (const star of item.connectedMainStars) {
+        const tag = document.createElement('span');
+        tag.className = 'connection-tag';
+        tag.textContent = `${star.name ?? star.id} (${star.frequency.toFixed(1)}Hz)`;
+        connContainer.appendChild(tag);
+      }
+    }
+
+    div.appendChild(connContainer);
+    searchResultsContainer.appendChild(div);
+  }
+}
+
+function executeSearch(): void {
+  const nameQuery = searchNameInput.value.trim();
+  const minFreqStr = searchFreqMin.value.trim();
+  const maxFreqStr = searchFreqMax.value.trim();
+
+  let results: SearchResultItem[] = [];
+
+  if (nameQuery) {
+    results = game.searchByName(nameQuery);
+  }
+
+  if (minFreqStr || maxFreqStr) {
+    const minFreq = minFreqStr ? parseFloat(minFreqStr) : null;
+    const maxFreq = maxFreqStr ? parseFloat(maxFreqStr) : null;
+    const freqResults = game.searchByFrequencyRange(minFreq, maxFreq);
+
+    if (nameQuery) {
+      const existingIds = new Set(results.map(r => r.anchor.id));
+      for (const r of freqResults) {
+        if (!existingIds.has(r.anchor.id)) {
+          results.push(r);
+        }
+      }
+    } else {
+      results = freqResults;
+    }
+  }
+
+  if (!nameQuery && !minFreqStr && !maxFreqStr) {
+    game.clearSearchHighlight();
+  }
+
+  renderSearchResults(results);
+}
+
+function clearSearch(): void {
+  searchNameInput.value = '';
+  searchFreqMin.value = '';
+  searchFreqMax.value = '';
+  game.clearSearchHighlight();
+  renderSearchResults([]);
+}
 
 game.setCallbacks({
   onLevelChange: (level: LevelData) => {
@@ -95,6 +214,40 @@ btnNext.addEventListener('click', async () => {
   completeModal.classList.remove('show');
   btnHint.textContent = '显示频率';
   await game.loadLevel(nextLevel);
+  clearSearch();
+});
+
+btnSearchToggle.addEventListener('click', () => {
+  searchPanel.classList.toggle('show');
+  if (searchPanel.classList.contains('show')) {
+    searchNameInput.focus();
+  }
+});
+
+searchClose.addEventListener('click', () => {
+  searchPanel.classList.remove('show');
+});
+
+btnSearchExec.addEventListener('click', executeSearch);
+
+btnSearchClear.addEventListener('click', clearSearch);
+
+searchNameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    executeSearch();
+  }
+});
+
+searchFreqMin.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    executeSearch();
+  }
+});
+
+searchFreqMax.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    executeSearch();
+  }
 });
 
 async function init(): Promise<void> {
